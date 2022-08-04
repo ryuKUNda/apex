@@ -20,14 +20,14 @@ export class Radar {
     this.renderRings();
   }
 
-  renderAll(localPlayer: app.core.Player, players: Array<app.core.Player>) {
+  renderAll(localPlayer: app.Player, players: Array<app.Player>, mode?: string) {
     for (const x of players) {
-      if (x.address === localPlayer.address) continue;
-      this.renderOne(localPlayer, x.localOrigin.value, x.createColor(localPlayer));
+      if (x.isLocal) continue;
+      this.renderOne(localPlayer, x.localOrigin.value, x.createColor(localPlayer, mode));
     }
   }
 
-  renderOne(localPlayer: app.core.Player, localOrigin: app.core.IVector, style: string | CanvasGradient | CanvasPattern) {
+  renderOne(localPlayer: app.Player, localOrigin: app.Vector, style: string | CanvasGradient | CanvasPattern) {
     const dx = (localPlayer.localOrigin.value.x - localOrigin.x) * 0.0254;
     const dy = (localPlayer.localOrigin.value.y - localOrigin.y) * 0.0254;
     const r = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));

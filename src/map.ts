@@ -1,7 +1,8 @@
 import * as app from './lib';
 import {ui} from './ui';
 const canvas = <HTMLCanvasElement> document.querySelector('.canvas');
-const map = new app.features.Map(canvas);
+const frameTime = 1000 / 10;
+const map = new app.Map(canvas);
 
 canvas.addEventListener('dblclick', () => {
   (document.fullscreenElement
@@ -9,31 +10,34 @@ canvas.addEventListener('dblclick', () => {
     : document.body.requestFullscreen()).catch();
 });
 
-ui(x => renderAsync(x, new app.features.Sense()).finally(() => {
+ui(x => renderAsync(x, new app.Sense(x)).finally(() => {
   canvas.height = 0;
   canvas.width = 0;
 }));
 
-async function renderAsync(core: app.core.Core, sense: app.features.Sense) {
-  await core.runAsync(() => {
-    const levelName = core.levelName.value;
-    const players = core.entityList.value;
-    const localPlayer = players.find(x => x.address === core.localPlayer.value);
+async function renderAsync(core: app.Core, sense: app.Sense) {
+  while (true) {
+    const beginTime = Date.now();
+    const [levelName, players] = await Promise.all([core.levelNameAsync(), core.playersAsync()]);
+    const localPlayer = players.find(x => x.isLocal);
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
-    renderFrame(levelName, localPlayer, players),
-    updateSense(localPlayer, players, sense);
-  });
+    await Promise.all([
+      renderFrame(levelName, localPlayer, players),
+      senseAsync(localPlayer, players, sense),
+      new Promise(x => setTimeout(x, frameTime - (Date.now() - beginTime)))
+    ]);
+  }
 }
 
-function renderFrame(levelName: string, localPlayer: app.core.Player | undefined, players: Array<app.core.Player>) {
+function renderFrame(levelName: app.CString, localPlayer: app.Player | undefined, players: Array<app.Player>) {
   map.refresh(levelName);
   if (!localPlayer) return;
   map.renderAll(localPlayer, players);
 }
 
-function updateSense(localPlayer: app.core.Player | undefined, players: Array<app.core.Player>, sense: app.features.Sense) {
+async function senseAsync(localPlayer: app.Player | undefined, players: Array<app.Player>, sense: app.Sense) {
   if (!localPlayer) return;
   if (!location.hash.includes('enable-sense')) return;
-  sense.updateStates(localPlayer, players);
+  await sense.updateAsync(localPlayer, players);
 }

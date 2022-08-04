@@ -8,23 +8,29 @@ const path = require('path');
   const offsets = await fetchAsync('https://apex.dumps.host/offsets');
   
   writeAsync('coreOffsets', {
-    levelName: BigInt(find(offsets, 'level_name')),
-    clEntityList: BigInt(find(offsets, 'cl_entitylist')),
-    localPlayer: BigInt(find(offsets, 'local_player'))
+    levelName: find(offsets, 'level_name'),
+    clEntityList: find(offsets, 'cl_entitylist'),
+    localPlayer: find(offsets, 'local_player')
   });
   
   writeAsync('entityOffsets', {
-    localOrigin: Number(find(cBaseEntity, 'm_localOrigin')) + 0x100,
-    iTeamNum: Number(find(cBaseEntity, 'm_iTeamNum')),
-    iName: Number(find(cBaseEntity, 'm_iName')),
-    glowEnable: Number(BigInt(0x3c8)),
-    glowThroughWall: Number(BigInt(0x3d0))
+    localOrigin: find(cBaseEntity, 'm_localOrigin') + BigInt(0x100),
+    iTeamNum: find(cBaseEntity, 'm_iTeamNum'),
+    iName: find(cBaseEntity, 'm_iName'),
+    glowColor: find(offsets, 'glow_color'),
+    glowType: find(offsets, 'glow_type') + BigInt(0x4),
+    glowEnable: BigInt(0x3c8),
+    glowThroughWall: BigInt(0x3d0)
   });
 
   writeAsync('playerOffsets', {
-    lifeState: Number(find(cPlayer, 'm_lifeState')),
-    viewAngles: Number(find(cPlayer, 'm_ammoPoolCapacity')) - 0x14,
-    bleedoutState: Number(find(cPlayer, 'm_bleedoutState'))
+    lifeState: find(cPlayer, 'm_lifeState'),
+    viewAngles: find(cPlayer, 'm_ammoPoolCapacity') - BigInt(0x14),
+    iHealth: find(cPlayer, 'm_iHealth'),
+    iMaxHealth: find(cPlayer, 'm_iMaxHealth'),
+    shieldHealth: find(cBaseEntity, 'm_shieldHealth'),
+    shieldHealthMax: find(cBaseEntity, 'm_shieldHealthMax'),
+    bleedoutState: find(cPlayer, 'm_bleedoutState')
   });
 })();
 
@@ -46,12 +52,12 @@ async function fetchAsync(url) {
 /**
  * @param {String} html
  * @param {String} name 
- * @returns {string}
+ * @returns {BigInt}
  */
 function find(html, name) {
   const expression = new RegExp(`${name}.*(0x[0-9A-Z]+)`, 'i');
   const match = html.match(expression);
-  if (match) return match[1];
+  if (match) return BigInt(match[1]);
   throw new Error(`Invalid offset ${name} in ${html}`);
 }
 
