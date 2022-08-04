@@ -6,6 +6,8 @@ export class Sense {
 
   updateStates(localPlayer: app.core.Player, players: Array<app.core.Player>) {
     for (const x of players) {
+        x.m_thirdPerson.value = 1;
+        x.m_thirdPersonShoulderView.value = 1;
       if (x.isSameTeam(localPlayer) || [0, 255].includes(x.glowEnable.value)) continue;
       const dx = (localPlayer.localOrigin.value.x - x.localOrigin.value.x) * 0.0254;
       const dy = (localPlayer.localOrigin.value.y - x.localOrigin.value.y) * 0.0254;
@@ -13,8 +15,7 @@ export class Sense {
       if (r < this.maximumDistance) {
         x.glowEnable.value = 7;
         x.glowThroughWalls.value = 2;
-        x.m_thirdPerson.value = 1;
-        x.m_thirdPersonShoulderView.value = 1;
+
       }
     }
   }
